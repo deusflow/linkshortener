@@ -5,8 +5,8 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/base64"
+	"math/rand"
 	"net/url"
-	"strings"
 	"time"
 )
 
@@ -48,4 +48,44 @@ func (u *UrlShortener) ShortenURL(ctx context.Context, originalURL string) (*dom
 	}
 	// Return the URL object with the full short URL
 	return urlObj, nil
+}
+
+// validateURL checks if the provided URL is valid.
+func (u *UrlShortener) validateURL(originalURL string) error {
+	// Parse the URL to check its validity
+	if originalURL == "" {
+		return domain.ErrEmptyURL
+	}
+
+	parsedURL, err := url.Parse(originalURL)
+	if err != nil {
+		return domain.ErrInvalidURL
+	}
+
+	if parsedURL.Scheme == "" || parsedURL.Host == "" {
+		return domain.ErrInvalidURL
+	}
+
+	return nil //all is good
+}
+
+func (u *UrlShortener) generateShortCode() string {
+
+	chars := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
+	//length := 6 // You can adjust the length of the short code as needed
+
+	length := 6
+
+	// Create a byte slice to hold the short code
+	result := make([]byte, length)
+
+	for i := 0; i < length; i++ {
+		// Generate a random index to select a character from the chars string
+		randomIndex := rand.Intn(len(chars))
+
+		result[i] = chars[randomIndex]
+	}
+	// Кодируем в base64 и обрезаем до нужной длины
+	return base64.URLEncoding.EncodeToString(bytes)[:8]
 }
