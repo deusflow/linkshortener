@@ -4,8 +4,6 @@ import (
 	"LinkShortener/internal/domain"
 	"context"
 	"crypto/rand"
-	"encoding/base64"
-	"math/rand"
 	"net/url"
 	"time"
 )
@@ -81,11 +79,15 @@ func (u *UrlShortener) generateShortCode() string {
 	result := make([]byte, length)
 
 	for i := 0; i < length; i++ {
-		// Generate a random index to select a character from the chars string
-		randomIndex := rand.Intn(len(chars))
-
-		result[i] = chars[randomIndex]
+		// Генерируем безопасное случайное число
+		b := make([]byte, 1)
+		_, err := rand.Read(b)
+		if err != nil {
+			panic(err) // или лог, если хочешь
+		}
+		// Преобразуем байт в индекс символа
+		result[i] = chars[int(b[0])%len(chars)]
 	}
 	// Кодируем в base64 и обрезаем до нужной длины
-	return base64.URLEncoding.EncodeToString(bytes)[:8]
+	return string(result)
 }
