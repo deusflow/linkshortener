@@ -31,7 +31,10 @@ func (u *UrlShortener) ShortenURL(ctx context.Context, originalURL string) (*dom
 		return nil, err
 	}
 	//generate a unique short code
-	shortCode := u.generateShortCode()
+	shortCode, err := u.generateUniqueShortCode(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	// Create a new URL object with the original URL and generated short code
 	urlObj := &domain.URL{
@@ -40,7 +43,7 @@ func (u *UrlShortener) ShortenURL(ctx context.Context, originalURL string) (*dom
 		CreatedAt: time.Now(),
 	}
 	// Save the URL object in the repository
-	err := u.urlRepo.Save(ctx, urlObj)
+	err = u.urlRepo.Save(ctx, urlObj)
 	if err != nil {
 		return nil, err
 	}
@@ -90,4 +93,23 @@ func (u *UrlShortener) generateShortCode() string {
 	}
 	// Кодируем в base64 и обрезаем до нужной длины
 	return string(result)
+}
+
+func (u *UrlShortener) generateUniqueShortCode(ctx context.Context) (string, error) {
+	const maxAttempts = 5
+
+	for i := 0; i < maxAttempts; i++ {
+		code := u.generateShortCode()
+
+		existing, err := u.urlRepo.GetByShortCode(ctx, code)
+		if err != nil && err != domain.ErrURLNotFound {
+			return "", err // какая-то непредвиденная ошибка
+		}
+
+		if existing == nil {
+			return code, nil // этот код свободен!
+		}
+	}
+
+	return "", domain.ErrUnableToGenerateCode
 }

@@ -14,6 +14,8 @@ type URLRepository interface {
 
 	// Delete
 	Delete(ctx context.Context, id int64) error
+
+	GetByShortCode(ctx context.Context, shortCode string) (*URL, error)
 }
 
 // ClickRepository interface for click operations
